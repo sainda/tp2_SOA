@@ -45,4 +45,21 @@ public class BankService {
     acc.balance = acc.balance.add(amount);
     return acc.balance;
   }
+
+  public BigDecimal withdraw(String accountId, BigDecimal amount) {
+    Account acc = getAccount(accountId);  // récupère le compte existant
+    if (acc == null) {
+        throw new UnknownAccountException("Compte inexistant: " + accountId);
+    }
+    if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+        throw new IllegalArgumentException("Montant invalide");
+    }
+    if (acc.balance.compareTo(amount) < 0) {
+        throw new IllegalArgumentException("Solde insuffisant");
+    }
+
+    acc.balance = acc.balance.subtract(amount); // retire le montant
+    return acc.balance;
+}
+
 }

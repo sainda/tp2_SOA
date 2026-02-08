@@ -8,49 +8,65 @@ import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 
 import com.example.bank.service.BankService;
-import com.example.bank.service.BankService.Account;
 import com.example.bank.service.UnknownAccountException;
 import com.example.bank.ws.AccountType;
 import com.example.bank.ws.DepositRequest;
 import com.example.bank.ws.DepositResponse;
 import com.example.bank.ws.GetAccountRequest;
 import com.example.bank.ws.GetAccountResponse;
+import com.example.bank.ws.WithdrawRequest;
+import com.example.bank.ws.WithdrawResponse;
 
 @Endpoint
 public class BankEndpoint {
 
-  private static final String NAMESPACE_URI = "http://example.com/bank";
-  private final BankService bankService;
+    private static final String NAMESPACE_URI = "http://example.com/bank";
+    private final BankService bankService;
 
-  public BankEndpoint(BankService bankService) {
-    this.bankService = bankService;
-  }
-
-  @PayloadRoot(namespace = NAMESPACE_URI, localPart = "GetAccountRequest")
-  @ResponsePayload
-  public GetAccountResponse getAccount(@RequestPayload GetAccountRequest request) {
-    Account acc = bankService.getAccount(request.getAccountId());
-    if (acc == null) {
-      throw new UnknownAccountException("Unknown accountId: " + request.getAccountId());
+    public BankEndpoint(BankService bankService) {
+        this.bankService = bankService;
     }
 
-    AccountType dto = new AccountType();
-    dto.setAccountId(acc.accountId);
-    dto.setOwner(acc.owner);
-    dto.setBalance(acc.balance);
-    dto.setCurrency(acc.currency);
+    // --- GetAccount ---
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "GetAccountRequest")
+    @ResponsePayload
+    public GetAccountResponse getAccount(@RequestPayload GetAccountRequest request) {
+        BankService.Account acc = bankService.getAccount(request.getAccountId());
+        if (acc == null) {
+            throw new UnknownAccountException("Unknown accountId: " + request.getAccountId());
+        }
 
-    GetAccountResponse resp = new GetAccountResponse();
-    resp.setAccount(dto);
-    return resp;
-  }
+        AccountType dto = new AccountType();
+        dto.setAccountId(acc.accountId);
+        dto.setOwner(acc.owner);
+        dto.setBalance(acc.balance);
+        dto.setCurrency(acc.currency);
 
-  @PayloadRoot(namespace = NAMESPACE_URI, localPart = "DepositRequest")
-  @ResponsePayload
-  public DepositResponse deposit(@RequestPayload DepositRequest request) {
-    BigDecimal newBalance = bankService.deposit(request.getAccountId(), request.getAmount());
-    DepositResponse resp = new DepositResponse();
-    resp.setNewBalance(newBalance);
-    return resp;
-  }
+        GetAccountResponse resp = new GetAccountResponse();
+        resp.setAccount(dto);
+        return resp;
+    }
+
+    // --- Deposit ---
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "DepositRequest")
+    @ResponsePayload
+    public DepositResponse deposit(@RequestPayload DepositRequest request) {
+        BigDecimal newBalance = bankService.deposit(request.getAccountId(), request.getAmount());
+        DepositResponse resp = new DepositResponse();
+        resp.setNewBalance(newBalance);
+        return resp;
+    }
+
+    // --- Withdraw ---
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "WithdrawRequest")
+    @ResponsePayload
+    public WithdrawResponse withdraw(@RequestPayload WithdrawRequest request) {
+
+        BigDecimal newBalance = bankService.withdraw(request.getAccountId(), request.getAmount());
+
+        WithdrawResponse response = new WithdrawResponse();
+        response.setNewBalance(newBalance);
+
+        return response;
+    }
 }
